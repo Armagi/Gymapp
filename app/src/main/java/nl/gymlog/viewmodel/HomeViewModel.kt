@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import nl.gymlog.data.WorkoutDatabase
 import nl.gymlog.data.WorkoutRepository
-import nl.gymlog.data.WorkoutSession
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -27,14 +26,3 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = 0
     )
 }
-
-// ── Metric descriptor ──────────────────────────────────────────────────────────
-
-data class MetricInfo(
-    val key: String,
-    val displayName: String,
-    val unit: String,
-    val colorHex: Long,
-    val getValue: (WorkoutSession) -> Float?,
-    val formatValue: (Float) -> String = { "%.0f".format(it) }
-)

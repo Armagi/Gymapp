@@ -3,7 +3,6 @@ package nl.gymlog.ui.screens
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Matrix
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,9 +44,6 @@ import androidx.core.content.ContextCompat
 import nl.gymlog.ui.theme.Background
 import java.io.File
 import java.util.concurrent.Executor
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun CaptureScreen(
@@ -72,9 +68,12 @@ fun CaptureScreen(
         permissionLauncher.launch(android.Manifest.permission.CAMERA)
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
         if (hasCameraPermission) {
-            // Camera viewfinder
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
@@ -101,10 +100,8 @@ fun CaptureScreen(
                 }
             )
 
-            // Guide frame overlay
             GuideFrameOverlay()
 
-            // Bottom controls
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,7 +109,6 @@ fun CaptureScreen(
                     .padding(bottom = 48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Shutter button
                 ShutterButton(
                     enabled = !isCapturing,
                     onClick = {
@@ -134,7 +130,6 @@ fun CaptureScreen(
                 )
             }
         } else {
-            // Permission denied state
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Camera-toegang is vereist.\nStel de toestemming in via Instellingen.",
@@ -150,7 +145,6 @@ fun CaptureScreen(
 @Composable
 private fun GuideFrameOverlay() {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Instruction text at top
         Text(
             text = "Fotografeer het Technogym cooldown-scherm",
             color = Color.White,
@@ -165,24 +159,36 @@ private fun GuideFrameOverlay() {
                 .padding(8.dp)
         )
 
-        // Corner markers guide frame
+        // Corner-marker guide frame
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
-                .fillMaxSize(0.6f)
+                .fillMaxSize(0.55f)
                 .align(Alignment.Center)
         ) {
-            // Top-left corner
-            CornerMarker(Alignment.TopStart)
-            // Top-right corner
-            CornerMarker(Alignment.TopEnd)
-            // Bottom-left corner
-            CornerMarker(Alignment.BottomStart)
-            // Bottom-right corner
-            CornerMarker(Alignment.BottomEnd)
+            // Draw four L-shaped corners using borders
+            listOf(
+                Alignment.TopStart, Alignment.TopEnd,
+                Alignment.BottomStart, Alignment.BottomEnd
+            ).forEach { alignment ->
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .align(alignment)
+                        .border(
+                            width = 2.5.dp,
+                            color = Color.White,
+                            shape = when (alignment) {
+                                Alignment.TopStart -> RoundedCornerShape(topStart = 6.dp)
+                                Alignment.TopEnd -> RoundedCornerShape(topEnd = 6.dp)
+                                Alignment.BottomStart -> RoundedCornerShape(bottomStart = 6.dp)
+                                else -> RoundedCornerShape(bottomEnd = 6.dp)
+                            }
+                        )
+                )
+            }
         }
 
-        // Sub-instruction below frame
         Text(
             text = "Lijn het scherm uit binnen de kaders",
             color = Color.White.copy(alpha = 0.7f),
@@ -190,32 +196,8 @@ private fun GuideFrameOverlay() {
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.Center)
-                .padding(top = 200.dp)
-        )
-    }
-}
-
-@Composable
-private fun CornerMarker(alignment: Alignment) {
-    val isTop = alignment == Alignment.TopStart || alignment == Alignment.TopEnd
-    val isLeft = alignment == Alignment.TopStart || alignment == Alignment.BottomStart
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .align(alignment)
-                .border(
-                    width = 2.dp,
-                    color = Color.White,
-                    shape = when (alignment) {
-                        Alignment.TopStart -> RoundedCornerShape(topStart = 4.dp)
-                        Alignment.TopEnd -> RoundedCornerShape(topEnd = 4.dp)
-                        Alignment.BottomStart -> RoundedCornerShape(bottomStart = 4.dp)
-                        else -> RoundedCornerShape(bottomEnd = 4.dp)
-                    }
-                )
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 140.dp)
         )
     }
 }

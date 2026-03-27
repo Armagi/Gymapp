@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -77,9 +76,7 @@ fun ReviewScreen(
                 bitmap = state.bitmap,
                 parsed = state.parsed,
                 onSave = { date, cal, dur, dist, pwr, spd, hr, maxHr, cph, cond, moves, review ->
-                    viewModel.saveSession(
-                        date, cal, dur, dist, pwr, spd, hr, maxHr, cph, cond, moves, review
-                    )
+                    viewModel.saveSession(date, cal, dur, dist, pwr, spd, hr, maxHr, cph, cond, moves, review)
                 },
                 onRetake = {
                     viewModel.reset()
@@ -88,7 +85,6 @@ fun ReviewScreen(
             )
         }
         else -> {
-            // Shouldn't normally show — show loading
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,12 +108,8 @@ private fun ReviewContent(
     val context = LocalContext.current
 
     var sessionDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-    // Editable field states
     var calories by remember { mutableStateOf(parsed.calories?.let { "%.0f".format(it) } ?: "") }
-    var duration by remember {
-        mutableStateOf(parsed.durationSeconds?.let { OcrParser.formatDuration(it) } ?: "")
-    }
+    var duration by remember { mutableStateOf(parsed.durationSeconds?.let { OcrParser.formatDuration(it) } ?: "") }
     var distance by remember { mutableStateOf(parsed.distanceKm?.let { "%.2f".format(it) } ?: "") }
     var avgPower by remember { mutableStateOf(parsed.avgPowerWatt?.let { "%.0f".format(it) } ?: "") }
     var avgSpeed by remember { mutableStateOf(parsed.avgSpeedSpm?.let { "%.0f".format(it) } ?: "") }
@@ -127,13 +119,10 @@ private fun ReviewContent(
     var condition by remember { mutableStateOf(parsed.conditionPI?.let { "%.0f".format(it) } ?: "") }
     var moves by remember { mutableStateOf(parsed.moves?.let { "%.0f".format(it) } ?: "") }
 
-    val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale("nl"))
-
     val datePicker = DatePickerDialog(
         context,
         { _, year, month, day ->
-            val cal = Calendar.getInstance().apply { set(year, month, day) }
-            sessionDate = cal.timeInMillis
+            sessionDate = Calendar.getInstance().apply { set(year, month, day) }.timeInMillis
         },
         Calendar.getInstance().get(Calendar.YEAR),
         Calendar.getInstance().get(Calendar.MONTH),
@@ -146,7 +135,6 @@ private fun ReviewContent(
             .background(Background)
             .verticalScroll(rememberScrollState())
     ) {
-        // Captured photo
         Image(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "Captured image",
@@ -169,7 +157,7 @@ private fun ReviewContent(
             Text(text = "Datum", fontSize = 13.sp, color = TextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = dateFormat.format(Date(sessionDate)),
+                text = SimpleDateFormat("d MMMM yyyy", Locale("nl")).format(Date(sessionDate)),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextPrimary,
@@ -183,75 +171,21 @@ private fun ReviewContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Fields
-            ReviewField(
-                label = "Calorieën (kcal)",
-                value = calories,
-                onValueChange = { calories = it },
-                needsReview = parsed.calories == null
-            )
-            ReviewField(
-                label = "Duur (MM:SS)",
-                value = duration,
-                onValueChange = { duration = it },
-                needsReview = parsed.durationSeconds == null,
-                isText = true
-            )
-            ReviewField(
-                label = "Afstand (km)",
-                value = distance,
-                onValueChange = { distance = it },
-                needsReview = parsed.distanceKm == null
-            )
-            ReviewField(
-                label = "Gem. vermogen (watt)",
-                value = avgPower,
-                onValueChange = { avgPower = it },
-                needsReview = parsed.avgPowerWatt == null
-            )
-            ReviewField(
-                label = "Gem. snelheid (spm)",
-                value = avgSpeed,
-                onValueChange = { avgSpeed = it },
-                needsReview = parsed.avgSpeedSpm == null
-            )
-            ReviewField(
-                label = "Gem. hartslag (spm)",
-                value = avgHr,
-                onValueChange = { avgHr = it },
-                needsReview = parsed.avgHeartRate == null
-            )
-            ReviewField(
-                label = "Max. hartslag (spm)",
-                value = maxHr,
-                onValueChange = { maxHr = it },
-                needsReview = parsed.maxHeartRate == null
-            )
-            ReviewField(
-                label = "Kcal per uur",
-                value = calPerHour,
-                onValueChange = { calPerHour = it },
-                needsReview = parsed.caloriesPerHour == null
-            )
-            ReviewField(
-                label = "Conditie (PI)",
-                value = condition,
-                onValueChange = { condition = it },
-                needsReview = parsed.conditionPI == null
-            )
-            ReviewField(
-                label = "MOVEs",
-                value = moves,
-                onValueChange = { moves = it },
-                needsReview = parsed.moves == null
-            )
+            ReviewField("Calorieën (kcal)", calories, { calories = it }, parsed.calories == null)
+            ReviewField("Duur (MM:SS)", duration, { duration = it }, parsed.durationSeconds == null, isText = true)
+            ReviewField("Afstand (km)", distance, { distance = it }, parsed.distanceKm == null)
+            ReviewField("Gem. vermogen (watt)", avgPower, { avgPower = it }, parsed.avgPowerWatt == null)
+            ReviewField("Gem. snelheid (spm)", avgSpeed, { avgSpeed = it }, parsed.avgSpeedSpm == null)
+            ReviewField("Gem. hartslag (spm)", avgHr, { avgHr = it }, parsed.avgHeartRate == null)
+            ReviewField("Max. hartslag (spm)", maxHr, { maxHr = it }, parsed.maxHeartRate == null)
+            ReviewField("Kcal per uur", calPerHour, { calPerHour = it }, parsed.caloriesPerHour == null)
+            ReviewField("Conditie (PI)", condition, { condition = it }, parsed.conditionPI == null)
+            ReviewField("MOVEs", moves, { moves = it }, parsed.moves == null)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Save button
             Button(
                 onClick = {
-                    // Parse duration MM:SS → seconds
                     val durSeconds = parseDurationInput(duration)
                     val calVal = calories.replace(',', '.').toFloatOrNull()
                     val distVal = distance.replace(',', '.').toFloatOrNull()
@@ -262,34 +196,23 @@ private fun ReviewContent(
                     val cphVal = calPerHour.replace(',', '.').toFloatOrNull()
                     val condVal = condition.replace(',', '.').toFloatOrNull()
                     val movesVal = moves.replace(',', '.').toFloatOrNull()
-
                     val review = listOf(calVal, distVal, pwrVal, spdVal, hrVal,
                         maxHrVal, cphVal, condVal, movesVal).any { it == null } || durSeconds == null
-
-                    onSave(
-                        sessionDate, calVal, durSeconds, distVal, pwrVal, spdVal,
-                        hrVal, maxHrVal, cphVal, condVal, movesVal, review
-                    )
+                    onSave(sessionDate, calVal, durSeconds, distVal, pwrVal, spdVal,
+                        hrVal, maxHrVal, cphVal, condVal, movesVal, review)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF6B35)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
             ) {
                 Text("Sessie opslaan", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Retake button
             OutlinedButton(
                 onClick = onRetake,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Border)
@@ -310,38 +233,35 @@ private fun ReviewField(
     needsReview: Boolean,
     isText: Boolean = false
 ) {
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = {
-                Text(
-                    text = if (needsReview) "$label ⚠" else label,
-                    color = if (needsReview) AmberWarning else TextSecondary,
-                    fontSize = 12.sp
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = if (isText) {
-                KeyboardOptions.Default
-            } else {
-                KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            },
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (needsReview) AmberWarning else Color(0xFFFF6B35),
-                unfocusedBorderColor = if (needsReview) AmberWarning.copy(alpha = 0.6f) else Border,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary,
-                cursorColor = Color(0xFFFF6B35),
-                focusedContainerColor = SurfaceCard,
-                unfocusedContainerColor = SurfaceCard
-            ),
-            supportingText = if (needsReview) {
-                { Text("Controleer deze waarde", color = AmberWarning, fontSize = 11.sp) }
-            } else null
-        )
-    }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = {
+            Text(
+                text = if (needsReview) "$label ⚠" else label,
+                color = if (needsReview) AmberWarning else TextSecondary,
+                fontSize = 12.sp
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        keyboardOptions = if (isText) KeyboardOptions.Default
+        else KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = if (needsReview) AmberWarning else Color(0xFFFF6B35),
+            unfocusedBorderColor = if (needsReview) AmberWarning.copy(alpha = 0.6f) else Border,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            cursorColor = Color(0xFFFF6B35),
+            focusedContainerColor = SurfaceCard,
+            unfocusedContainerColor = SurfaceCard
+        ),
+        supportingText = if (needsReview) {
+            { Text("Controleer deze waarde", color = AmberWarning, fontSize = 11.sp) }
+        } else null
+    )
 }
 
 private fun parseDurationInput(input: String): Int? {
@@ -351,5 +271,5 @@ private fun parseDurationInput(input: String): Int? {
         val seconds = colonMatch.groupValues[2].toIntOrNull() ?: return null
         return minutes * 60 + seconds
     }
-    return input.trim().toIntOrNull()?.times(60) // treat plain number as minutes
+    return input.trim().toIntOrNull()?.times(60)
 }
