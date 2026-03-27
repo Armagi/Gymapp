@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GymLog</string>
+    <string name="capture_instruction">Fotografeer het Technogym cooldown-scherm</string>
+    <string name="capture_align">Lijn het scherm uit binnen de kaders</string>
+    <string name="review_title">Controleer je sessie</string>
+    <string name="review_save">Sessie opslaan</string>
+    <string name="review_retake">Opnieuw fotograferen</string>
+    <string name="home_sessions_count">%d sessies gelogd</string>
+    <string name="home_empty">Nog geen sessies. Maak je eerste foto.</string>
+    <string name="ocr_error">Kon scherm niet lezen, probeer opnieuw</string>
+    <string name="field_needs_review">Controleer deze waarde</string>
+</resources>

@@ -1,0 +1,2 @@
+-keep class nl.gymlog.data.** { *; }
+-dontwarn com.patrykandpatrick.vico.**
