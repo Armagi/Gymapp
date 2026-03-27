@@ -1,5 +1,6 @@
 package nl.gymlog.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,24 +21,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.compose.chart.line.lineSpec
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.entryOf
 import nl.gymlog.data.WorkoutSession
 import nl.gymlog.ui.theme.Background
 import nl.gymlog.ui.theme.Border
@@ -66,7 +63,6 @@ fun DetailScreen(
             .fillMaxSize()
             .background(Background)
     ) {
-        // Top bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,38 +70,24 @@ fun DetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(
-                    Icons.Filled.ArrowBack,
-                    contentDescription = "Terug",
-                    tint = TextPrimary
-                )
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Terug", tint = TextPrimary)
             }
-            val currentMetric = ALL_METRICS[pagerState.currentPage]
             Text(
-                text = currentMetric.displayName,
+                text = ALL_METRICS[pagerState.currentPage].displayName,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
             )
         }
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            MetricDetailPage(
-                metric = ALL_METRICS[page],
-                sessions = sessions
-            )
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            MetricDetailPage(metric = ALL_METRICS[page], sessions = sessions)
         }
     }
 }
 
 @Composable
-private fun MetricDetailPage(
-    metric: MetricDef,
-    sessions: List<WorkoutSession>
-) {
+private fun MetricDetailPage(metric: MetricDef, sessions: List<WorkoutSession>) {
     val accentColor = Color(metric.colorHex)
     val values = sessions.mapNotNull { metric.getValue(it) }
     val latestValue = values.lastOrNull()
@@ -115,7 +97,6 @@ private fun MetricDetailPage(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Latest value
         if (latestValue != null) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
@@ -179,35 +160,60 @@ private fun MetricDetailPage(
 }
 
 @Composable
-private fun MetricLineChart(
-    values: List<Float>,
-    accentColor: Color
-) {
-    val producer = remember(values) {
-        ChartEntryModelProducer(
-            values.mapIndexed { idx, v -> entryOf(idx.toFloat(), v) }
-        )
-    }
-
-    LaunchedEffect(values) {
-        producer.setEntries(values.mapIndexed { idx, v -> entryOf(idx.toFloat(), v) })
-    }
-
-    Chart(
-        chart = lineChart(
-            lines = listOf(
-                lineSpec(lineColor = accentColor, lineThicknessDp = 2f)
-            )
-        ),
-        chartModelProducer = producer,
-        startAxis = rememberStartAxis(),
-        bottomAxis = rememberBottomAxis(),
+private fun MetricLineChart(values: List<Float>, accentColor: Color) {
+    Canvas(
         modifier = Modifier
             .fillMaxWidth()
             .height(260.dp)
             .background(SurfaceCard, RoundedCornerShape(16.dp))
             .padding(8.dp)
-    )
+    ) {
+        val minVal = values.min()
+        val maxVal = values.max()
+        val range = (maxVal - minVal).coerceAtLeast(0.001f)
+        val stepX = size.width / (values.size - 1).toFloat()
+        val padY = 8.dp.toPx()
+        val availH = size.height - padY * 2
+
+        fun yFor(v: Float) = padY + availH * (1f - (v - minVal) / range)
+
+        // Horizontal gridlines
+        repeat(4) { i ->
+            val y = padY + availH * (i / 3f)
+            drawLine(
+                color = Color(0xFF2C2C2C),
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
+        // Line path
+        val path = Path()
+        values.forEachIndexed { i, v ->
+            val x = i * stepX
+            val y = yFor(v)
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(
+            path = path,
+            color = accentColor,
+            style = Stroke(
+                width = 2.dp.toPx(),
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
+            )
+        )
+
+        // Dot markers
+        values.forEachIndexed { i, v ->
+            drawCircle(
+                color = accentColor,
+                radius = 4.dp.toPx(),
+                center = Offset(i * stepX, yFor(v))
+            )
+        }
+    }
 }
 
 @Composable
